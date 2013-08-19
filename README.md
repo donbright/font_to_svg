@@ -169,6 +169,18 @@ Please see these sites for more info.
  * SVG paths: http://www.w3schools.com/svg/svg_path.asp
  * SVG paths + nonzero: http://www.w3.org/TR/SVG/painting.html#FillProperties
 
+### What about rendering multiple characters?
+
+To do this properly for all languages, you actually need a 'layout 
+engine', like Harfbuzz and/or Pango. These are at present, far beyond 
+the scope of this project. 
+
+It may be possible to render strings of characters in 'non-connected' 
+scripts, for example English ( Latin alphabet), or Chinese, using the 
+basic bounding box information. However this library, at present, is 
+probably not very suitable for ligature + combination scripts like 
+Arabic or Devanagari.
+
 ### Test characters
 
 Unicode 
@@ -216,6 +228,8 @@ auto-find fonts on linux, not require cmdline fontname?
 accept U+4034 (hex) input format
 
 regression test
+
+Long term - opentype? pango / harfbuzz?
 
 ### Trademark disclaimer
 
