@@ -18,8 +18,7 @@ with transforms/footers.
 
 The code does not currently support OpenType or it's features, such as 
 ligatures. It does not support creating an "SVG Font". It only does very 
-basic conversion of Truetype glyphs to SVG path shapes. See below for an 
-example screenshot.
+basic conversion of Truetype glyphs to SVG path shapes.
 
 ### Using in your own C++ project
 
