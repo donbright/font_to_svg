@@ -18,7 +18,8 @@ with transforms/footers.
 
 The code does not currently support OpenType or it's features, such as 
 ligatures. It does not support creating an "SVG Font". It only does very 
-basic conversion of Truetype glyphs to SVG path shapes.
+basic conversion of Truetype glyphs to SVG path shapes. It might not 
+be useful for web fonts or other usages. 
 
 ### Using in your own C++ project
 
@@ -97,6 +98,11 @@ the product documentation would be appreciated but is not required.
 To understand the usage, look at the files named 'example*.cpp' that come
 with the source code. You can output the bare svg path data, or a bunch
 of debugging information.
+
+Don't forget that some fonts have restrictive copyright licenses that 
+forbid this type of conversion. You can use fonts from 
+http://openfontlibrary.org If you want to be safe from accusations of 
+copyright violation.
 
 ### Finding cool Unicode points
 
@@ -194,10 +200,16 @@ The "Batik" project does similar stuff. It is Java:
 
 http://xmlgraphics.apache.org/batik/tools/font-converter.html
 
-### Finding A Unicode font on linux
+### Finding A Unicode font
 
-Linux: Run 'charmap', under ubuntu, and then right click on interesting 
-looking glyphs. It will give you some rough idea of the font name.
+An easy resource is here:
+
+http://openfontlibrary.org
+
+If you have linux, you can explore as follows:
+
+Run 'charmap', under ubuntu, and then right click on interesting looking 
+glyphs. It will give you some rough idea of the font name.
 
 Then do 'locate ttf | grep ttf$' which will give a list of all Truetype 
 font files (w .ttf extensions) on your system .
