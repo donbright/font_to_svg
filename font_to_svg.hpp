@@ -47,8 +47,8 @@ class ttf_file
 {
 public:
 	std::string filename;
-  FT_Library library;
-  FT_Face face;
+	FT_Library library;
+	FT_Face face;
 	FT_Error error;
 
 	ttf_file()
@@ -97,7 +97,7 @@ public:
 	FT_Outline ftoutline;
 	FT_Vector* ftpoints;
 	FT_Glyph_Metrics gm;
-  FT_Face face;
+	FT_Face face;
 	ttf_file file;
 	char* tags;
 	short* contours;
@@ -125,7 +125,7 @@ public:
 
 	void init( std::string unicode_s )
 	{
-	  face = file.face;
+		face = file.face;
 		codepoint = strtol( unicode_s.c_str() , NULL, 0 );
 		// Load the Glyph into the face's Glyph Slot + print details
 		FT_UInt glyph_index = FT_Get_Char_Index( face, codepoint );
@@ -147,9 +147,9 @@ public:
 		gm = slot->metrics;
 
 		// Print outline details, taken from the glyph in the slot.
-	  debug << "\nNum points: " << ftoutline.n_points;
-	  debug << "\nNum contours: " << ftoutline.n_contours;
-		debug << "  Endpoint indexes:";
+		debug << "\nNum points: " << ftoutline.n_points;
+		debug << "\nNum contours: " << ftoutline.n_contours;
+		debug << "  Contour endpoint index values:";
 		for ( int i = 0 ; i < ftoutline.n_contours ; i++ ) debug << " " << ftoutline.contours[i];
 		debug << "\n-->\n";
 
@@ -170,7 +170,7 @@ public:
 
 		tmp << "\n<svg width='" << bbwidth << "px'"
 			<< " height='" << bbheight << "px'"
-	    << " xmlns='http://www.w3.org/2000/svg' version='1.1'>";
+			<< " xmlns='http://www.w3.org/2000/svg' version='1.1'>";
 
 		return tmp.str();
 	}
@@ -284,13 +284,17 @@ public:
 		int contour_starti = 0;
 		int contour_endi = contours[0];
 		int contour_counter = 0;
+		// tag bit 1 indicates whether its a control point on a bez curve or not.
+		// two consecutive control points imply another point halfway between them
 		tmp << "\n   M" << ftpoints[0].x << "," << ftpoints[0].y;
-		for ( int i = 0 ; i < ftoutline.n_points ; i++ ) {
-			int previndex = i-1;
-			int currindex = i;
-			int nextindex = i+1;
-			if ( nextindex > contour_endi ) nextindex = contour_starti;
-			if ( previndex < contour_starti ) previndex = contour_endi;
+		int numpts = ftoutline.n_points;
+		for ( int i = 0 ; i < numpts+1 ; i++ ) {
+      FT_Vector nextp;
+			int previndex = (i-1)%numpts;
+			int currindex = (i  )%numpts;
+			int nextindex = (i+1)%numpts;
+			if ( nextindex > contour_endi ) nextindex = contour_starti%numpts;
+			if ( previndex < contour_starti ) previndex = contour_endi%numpts;
 			// tag bit 1 indicates whether its a control point on a bez curve or not.
 			// two consecutive control points imply another point halfway between them
 			if ( tags[currindex] & 1 ) {
@@ -298,25 +302,30 @@ public:
 					tmp << "\n    L" << ftpoints[currindex].x << "," << ftpoints[currindex].y;
 				}
 			} else {
-				tmp << "\n    Q" << ftpoints[currindex].x << "," << ftpoints[currindex].y;
-				FT_Vector nextp = ftpoints[nextindex];
+				nextp = ftpoints[nextindex];
 				if ( ! ( tags[nextindex] & 1 ) ) {
 					nextp = halfway_between( ftpoints[currindex], ftpoints[nextindex] );
 				}
-				tmp << " " << nextp.x << "," << nextp.y;
+				if (i>0) {
+					tmp << "\n    Q" << ftpoints[currindex].x << "," << ftpoints[currindex].y;
+					tmp << " " << nextp.x << "," << nextp.y;
+				} else {
+					tmp << "\n    M" << nextp.x << "," << nextp.y;
+				}
 			}
 			if ( currindex == contour_endi ) {
 				contour_counter = ( contour_counter + 1 ) % ftoutline.n_contours;
-				contour_starti = ( currindex + 1 ) % ftoutline.n_points;;
+				contour_starti = ( currindex + 1 ) % ftoutline.n_points;
 				contour_endi = contours[contour_counter];
 				FT_Vector firstp;
 				if ( ! ( tags[contour_starti] & 1 ) )
 					firstp = halfway_between( ftpoints[contour_endi], ftpoints[contour_starti] );
 				else
 					firstp = ftpoints[contour_starti];
-				tmp << "\n  Z M" << firstp.x << "," << firstp.y;
+				std::cerr << "i" << i << "," << contour_starti << "," << contour_endi << "," << numpts << "," << currindex << "\n";
+				if (i!=contour_endi) tmp << "\n  Z M" << firstp.x << "," << firstp.y;
 			}
-		}
+		} // for loop thru points
 		tmp << "\n  '/>";
 		return tmp.str();
 	}
