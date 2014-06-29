@@ -5,6 +5,8 @@ This library will create SVG path shapes from TrueType font files.
 
 ### Current Status
 
+This project has some bugs but will handle 'standard' fonts reasonably well.
+
 Currently this project consists of a C++ language header that can used 
 in conjuction with the Freetype library to create a basic conversion 
 program that will extract a single character from a .ttf file and create 
@@ -189,10 +191,13 @@ Arabic or Devanagari.
 
 ### Test characters
 
-Unicode 
-67, 68 (C, D)
-48007 and 0x1f01e
-0x2766 0x2767
+Nice characters that show unusual patterns. Good for testing.
+./example1 FreeSerif.ttf 67 > x.svg
+./example1 FreeSerif.ttf 68 > x.svg
+./example1 FreeSerif.ttf 0x2766 > x.svg
+./example1 FreeSerif.ttf 0x2767 > x.svg
+./example1 FreeSerif.ttf 0x1f01a > x.svg
+./example1 FreeSerif.ttf 0x48007 > x.svg
 
 ### Other projects
 

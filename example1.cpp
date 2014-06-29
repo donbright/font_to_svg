@@ -11,13 +11,14 @@ int main( int argc, char * argv[] )
 
 	font2svg::glyph g( argv[1], argv[2] );
 	std::cout << g.svgheader()
-	  << g.svgborder()
+		<< g.svgborder()
 		<< g.svgtransform()
 		<< g.axes()
 		<< g.typography_box()
 		<< g.points()
 		<< g.pointlines()
 		<< g.outline()
+		<< g.labelpts()
 		<< g.svgfooter();
 
 	g.free();

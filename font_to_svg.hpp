@@ -1,4 +1,4 @@
-// truetype_to_svhpp - Read TrueType (R) outline, write SVG
+// font_to_svg.hpp - Read Font in TrueType (R) format, write SVG
 // Copyright Don Bright 2013 <hugh.m.bright@gmail.com>
 /*
 
@@ -21,8 +21,27 @@
   License based on zlib license, by Jean-loup Gailly and Mark Adler
 */
 
-#ifndef __truetype_to_svg_h__
-#define __truetype_to_svg_h__
+/*
+
+This program reads a TTF (TrueType (R)) file and outputs an SVG path.
+
+See these sites for more info.
+Basic Terms: http://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
+FType + outlines: http://www.freetype.org/freetype2/docs/reference/ft2-outline_processinhtml
+FType + contours: http://www.freetype.org/freetype2/docs/glyphs/glyphs-6.html
+TType contours: https://developer.apple.com/fonts/TTRefMan/RM01/Chap1.html
+TType contours2: http://www.truetype-typography.com/ttoutln.htm
+Non-zero winding rule: http://en.wikipedia.org/wiki/Nonzero-rule
+SVG paths: http://www.w3schools.com/svg/svg_path.asp
+SVG paths + nonzero: http://www.w3.org/TR/SVG/paintinhtml#FillProperties
+
+TrueType is a trademark of Apple Inc. Use of this mark does not imply
+endorsement.
+
+*/
+
+#ifndef __font_to_svg_h__
+#define __font_to_svg_h__
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -65,7 +84,7 @@ public:
 		// Load a typeface
 		error = FT_New_Face( library, filename.c_str(), 0, &face );
 		debug << "\nFace load error code: " << error;
-		debug << "\nTrueType filename: " << filename;
+		debug << "\nfont filename: " << filename;
 		if (error) {
 			std::cerr << "problem loading file " << filename << "\n";
 			exit(1);
@@ -88,6 +107,114 @@ public:
 
 };
 
+
+/* Draw the outline of the font as svg.
+There are three main components.
+1. the points
+2. the 'tags' for the points
+3. the contour indexes (that define which points belong to which contour)
+*/
+std::string do_outline(std::vector<FT_Vector> points, std::vector<char> tags, std::vector<short> contours)
+{
+	std::stringstream debug, svg;
+	std::cout << "<!-- do outline -->\n";
+	if (points.size()==0) return "<!-- font had 0 points -->";
+	if (contours.size()==0) return "<!-- font had 0 contours -->";
+	svg.str("");
+	svg << "\n\n  <!-- draw actual outline using lines and Bezier curves-->";
+	svg	<< "\n  <path fill='black' stroke='black'"
+		<< " fill-opacity='0.45' "
+		<< " stroke-width='2' "
+		<< " d='";
+
+	/* tag bit 1 indicates whether its a control point on a bez curve
+	or not. two consecutive control points imply another point halfway
+	between them */
+
+	// Step 1. move to starting point (M x-coord y-coord )
+	// Step 2. decide whether to draw a line or a bezier curve or to move
+	// Step 3. for bezier: Q control-point-x control-point-y,
+	//		         destination-x, destination-y
+	//         for line:   L x-coord, y-coord
+	//         for move:   M x-coord, y-coord
+
+	int contour_starti = 0;
+	int contour_endi = 0;
+	for ( int i = 0 ; i < contours.size() ; i++ ) {
+		contour_endi = contours.at(i);
+		debug << "new contour starting. startpt index, endpt index:";
+		debug << contour_starti << "," << contour_endi << "\n";
+		int offset = contour_starti;
+		int npts = contour_endi - contour_starti + 1;
+		debug << "number of points in this contour: " << npts << "\n";
+		debug << "moving to first pt " << points[offset].x << "," << points[offset].y << "\n";
+		svg << "\n M " << points[contour_starti].x << "," << points[contour_starti].y << "\n";
+		debug << "listing pts: [this pt index][isctrl] <next pt index><isctrl> [x,y] <nx,ny>\n";
+		for ( int j = 0; j < npts; j++ ) {
+			int thisi = j%npts + offset;
+			int nexti = (j+1)%npts + offset;
+			int nextnexti = (j+2)%npts + offset;
+			int x = points[thisi].x;
+			int y = points[thisi].y;
+			int nx = points[nexti].x;
+			int ny = points[nexti].y;
+			int nnx = points[nextnexti].x;
+			int nny = points[nextnexti].y;
+			bool this_tagbit1 = (tags[ thisi ] & 1);
+			bool next_tagbit1 = (tags[ nexti ] & 1);
+			bool nextnext_tagbit1 = (tags[ nextnexti ] & 1);
+			bool this_isctl = !this_tagbit1;
+			bool next_isctl = !next_tagbit1;
+			bool nextnext_isctl = !nextnext_tagbit1;
+			debug << " [" << thisi << "]";
+			debug << "[" << !this_tagbit1 << "]";
+			debug << " <" << nexti << ">";
+			debug << "<" << !next_tagbit1 << ">";
+			debug << " <<" << nextnexti << ">>";
+			debug << "<<" << !nextnext_tagbit1 << ">>";
+			debug << " [" << x << "," << y << "]";
+			debug << " <" << nx << "," << ny << ">";
+			debug << " <<" << nnx << "," << nny << ">>";
+			debug << "\n";
+
+			if (this_isctl && next_isctl) {
+				debug << " two adjacent ctl pts. adding point halfway between " << thisi << " and " << nexti << ":";
+				debug << " reseting x and y to ";
+				x = (x + nx) / 2;
+				y = (y + ny) / 2;
+				this_isctl = false;
+				debug << " [" << x << "," << y <<"]\n";
+				if (j==0) {
+					debug << "first pt in contour was ctrl pt. moving to non-ctrl pt\n";
+					svg << " M " << x << "," << y << "\n";
+				}
+			}
+
+			if (!this_isctl && next_isctl && !nextnext_isctl) {
+				svg << " Q " << nx << "," << ny << " " << nnx << "," << nny << "\n";
+				debug << " bezier to " << nnx << "," << nny << " ctlx, ctly: " << nx << "," << ny << "\n";
+			} else if (!this_isctl && next_isctl && nextnext_isctl) {
+				debug << " two ctl pts coming. adding point halfway between " << nexti << " and " << nextnexti << ":";
+				debug << " reseting nnx and nny to halfway pt";
+				nnx = (nx + nnx) / 2;
+				nny = (ny + nny) / 2;
+				svg << " Q " << nx << "," << ny << " " << nnx << "," << nny << "\n";
+				debug << " bezier to " << nnx << "," << nny << " ctlx, ctly: " << nx << "," << ny << "\n";
+			} else if (!this_isctl && !next_isctl) {
+				svg << " L " << nx << "," << ny << "\n";
+				debug << " line to " << nx << "," << ny << "\n";			
+			} else if (this_isctl && !next_isctl) {
+				debug << " this is ctrl pt. skipping to " << nx << "," << ny << "\n";
+			}
+		}
+		contour_starti = contour_endi+1;
+		svg << " Z\n";
+	}
+	svg << "\n  '/>";
+	std::cout << "\n<!--\n" << debug.str() << " \n-->\n";
+	return svg.str();
+}
+
 class glyph
 {
 public:
@@ -95,27 +222,33 @@ public:
 	FT_GlyphSlot slot;
 	FT_Error error;
 	FT_Outline ftoutline;
-	FT_Vector* ftpoints;
 	FT_Glyph_Metrics gm;
 	FT_Face face;
 	ttf_file file;
+
+	FT_Vector* ftpoints;
 	char* tags;
 	short* contours;
+
 	std::stringstream debug, tmp;
 	int bbwidth, bbheight;
 
-	glyph( ttf_file &f, std::string unicode_s )
+	glyph( ttf_file &f, std::string unicode_str )
 	{
 		file = f;
-		init( unicode_s );
+		init( unicode_str );
 	}
 
-	glyph( char * filename, char * unicode_c_str )
+	glyph( const char * filename, std::string unicode_str )
 	{
-		std::string fname( filename );
-		std::string unicode_s( unicode_c_str );
-		this->file = ttf_file( fname );
-		init( unicode_s );
+		this->file = ttf_file( std::string(filename) );
+		init( unicode_str );
+	}
+
+	glyph( const char * filename, const char * unicode_c_str )
+	{
+		this->file = ttf_file( std::string(filename) );
+		init( std::string(unicode_c_str) );
 	}
 
 	void free()
@@ -129,7 +262,7 @@ public:
 		codepoint = strtol( unicode_s.c_str() , NULL, 0 );
 		// Load the Glyph into the face's Glyph Slot + print details
 		FT_UInt glyph_index = FT_Get_Char_Index( face, codepoint );
-		debug << "\nUnicode requested: " << unicode_s;
+		debug << "<!--\nUnicode requested: " << unicode_s;
 		debug << " (decimal: " << codepoint << " hex: 0x"
 			<< std::hex << codepoint << std::dec << ")";
 		debug << "\nGlyph index for unicode: " << glyph_index;
@@ -149,7 +282,7 @@ public:
 		// Print outline details, taken from the glyph in the slot.
 		debug << "\nNum points: " << ftoutline.n_points;
 		debug << "\nNum contours: " << ftoutline.n_contours;
-		debug << "  Contour endpoint index values:";
+		debug << "\nContour endpoint index values:";
 		for ( int i = 0 ; i < ftoutline.n_contours ; i++ ) debug << " " << ftoutline.contours[i];
 		debug << "\n-->\n";
 
@@ -162,7 +295,7 @@ public:
 		bbwidth = face->bbox.xMax - face->bbox.xMin;
 		tags = ftoutline.tags;
 		contours = ftoutline.contours;
-
+		std::cout << debug.str();
 	}
 
 	std::string svgheader() {
@@ -186,7 +319,7 @@ public:
 	}
 
 	std::string svgtransform() {
-		// Truetype points are not in the range usually visible by SVG.
+		// TrueType points are not in the range usually visible by SVG.
 		// they often have negative numbers etc. So.. here we
 		// 'transform' to make visible.
 		//
@@ -236,10 +369,25 @@ public:
 		tmp.str("");
 		tmp << "\n\n  <!-- draw points as circles -->";
 		for ( int i = 0 ; i < ftoutline.n_points ; i++ ) {
+			bool this_is_ctrl_pt = !(tags[i] & 1);
+			bool next_is_ctrl_pt = !(tags[(i+1)%ftoutline.n_points] & 1);
+			int x = ftpoints[i].x;
+			int y = ftpoints[i].y;
+			int nx = ftpoints[(i+1)%ftoutline.n_points].x;
+			int ny = ftpoints[(i+1)%ftoutline.n_points].y;
 			int radius = 5;
 			if ( i == 0 ) radius = 10;
 			std::string color;
-			if (tags[i] & 1) color = "blue"; else color = "none";
+			if (this_is_ctrl_pt) color = "none"; else color = "blue";
+			if (this_is_ctrl_pt && next_is_ctrl_pt) {
+				tmp << "\n  <!-- halfway pt between 2 ctrl pts -->";
+				tmp << "<circle"
+				  << " fill='" << "blue" << "'"
+				  << " stroke='black'"
+				  << " cx='" << (x+nx)/2 << "' cy='" << (y+ny)/2 << "'"
+				  << " r='" << 2 << "'"
+				  << "/>";
+			};
 			tmp << "\n  <!--" << i << "-->";
 			tmp << "<circle"
 				<< " fill='" << color << "'"
@@ -256,78 +404,44 @@ public:
 		tmp.str("");
 		tmp << "\n\n  <!-- draw straight lines between points -->";
 		tmp << "\n  <path fill='none' stroke='green' d='";
-		tmp << "\n   M " << ftpoints[0].x << "," << ftpoints[0].y << " L ";
-		for ( int i = 0 ; i < ftoutline.n_points ; i++ ) {
-			tmp << " " << ftpoints[i].x << "," << ftpoints[i].y;
-		}
+		tmp << "\n   M " << ftpoints[0].x << "," << ftpoints[0].y << "\n";
 		tmp << "\n  '/>";
+		for ( int i = 0 ; i < ftoutline.n_points-1 ; i++ ) {
+			std::string dash_mod("");
+			for (int j = 0 ; j < ftoutline.n_contours; j++ ) {
+				if (i==contours[j])
+					dash_mod = " stroke-dasharray='3'";
+			}
+			tmp << "\n  <path fill='none' stroke='green'";
+			tmp << dash_mod;
+			tmp << " d='";
+ 			tmp << " M " << ftpoints[i].x << "," << ftpoints[i].y;
+ 			tmp << " L " << ftpoints[(i+1)%ftoutline.n_points].x << "," << ftpoints[(i+1)%ftoutline.n_points].y;
+			tmp << "\n  '/>";
+		}
+		return tmp.str();
+	}
+
+	std::string labelpts() {
+		tmp.str("");
+		for ( int i = 0 ; i < ftoutline.n_points ; i++ ) {
+			tmp << "\n <g font-family='SVGFreeSansASCII,sans-serif' font-size='10'>\n";
+			tmp << "  <text id='revision'";
+			tmp << " x='" << ftpoints[i].x + 5 << "'";
+			tmp << " y='" << ftpoints[i].y - 5 << "'";
+			tmp << " stroke='none' fill='darkgreen'>\n";
+			tmp << "  " << ftpoints[i].x  << "," << ftpoints[i].y;
+			tmp << "  </text>\n";
+			tmp << " </g>\n";
+		}
 		return tmp.str();
 	}
 
 	std::string outline()  {
-		/* SVG output. See these sites for more info.
-		Basic Terms: http://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
-		FType + outlines: http://www.freetype.org/freetype2/docs/reference/ft2-outline_processinhtml
-		FType + contours: http://www.freetype.org/freetype2/docs/glyphs/glyphs-6.html
-		TType contours: https://developer.apple.com/fonts/TTRefMan/RM01/Chap1.html
-		TType contours2: http://www.truetype-typography.com/ttoutln.htm
-		Non-zero winding rule: http://en.wikipedia.org/wiki/Nonzero-rule
-		SVG paths: http://www.w3schools.com/svg/svg_path.asp
-		SVG paths + nonzero: http://www.w3.org/TR/SVG/paintinhtml#FillProperties
-		*/
-		tmp.str("");
-		tmp << "\n\n  <!-- draw actual outline using lines and Bezier curves-->";
-		tmp	<< "\n  <path fill='black' stroke='black'"
-			<< " fill-opacity='0.45' "
-			<< " stroke-width='2' "
-			<< " d='";
-		int contour_starti = 0;
-		int contour_endi = contours[0];
-		int contour_counter = 0;
-		// tag bit 1 indicates whether its a control point on a bez curve or not.
-		// two consecutive control points imply another point halfway between them
-		tmp << "\n   M" << ftpoints[0].x << "," << ftpoints[0].y;
-		int numpts = ftoutline.n_points;
-		for ( int i = 0 ; i < numpts+1 ; i++ ) {
-      FT_Vector nextp;
-			int previndex = (i-1)%numpts;
-			int currindex = (i  )%numpts;
-			int nextindex = (i+1)%numpts;
-			if ( nextindex > contour_endi ) nextindex = contour_starti%numpts;
-			if ( previndex < contour_starti ) previndex = contour_endi%numpts;
-			// tag bit 1 indicates whether its a control point on a bez curve or not.
-			// two consecutive control points imply another point halfway between them
-			if ( tags[currindex] & 1 ) {
-				if ( tags[previndex] & 1 ) {
-					tmp << "\n    L" << ftpoints[currindex].x << "," << ftpoints[currindex].y;
-				}
-			} else {
-				nextp = ftpoints[nextindex];
-				if ( ! ( tags[nextindex] & 1 ) ) {
-					nextp = halfway_between( ftpoints[currindex], ftpoints[nextindex] );
-				}
-				if (i>0) {
-					tmp << "\n    Q" << ftpoints[currindex].x << "," << ftpoints[currindex].y;
-					tmp << " " << nextp.x << "," << nextp.y;
-				} else {
-					tmp << "\n    M" << nextp.x << "," << nextp.y;
-				}
-			}
-			if ( currindex == contour_endi ) {
-				contour_counter = ( contour_counter + 1 ) % ftoutline.n_contours;
-				contour_starti = ( currindex + 1 ) % ftoutline.n_points;
-				contour_endi = contours[contour_counter];
-				FT_Vector firstp;
-				if ( ! ( tags[contour_starti] & 1 ) )
-					firstp = halfway_between( ftpoints[contour_endi], ftpoints[contour_starti] );
-				else
-					firstp = ftpoints[contour_starti];
-				std::cerr << "i" << i << "," << contour_starti << "," << contour_endi << "," << numpts << "," << currindex << "\n";
-				if (i!=contour_endi) tmp << "\n  Z M" << firstp.x << "," << firstp.y;
-			}
-		} // for loop thru points
-		tmp << "\n  '/>";
-		return tmp.str();
+		std::vector<FT_Vector> pointsv(ftpoints,ftpoints+ftoutline.n_points);
+		std::vector<char> tagsv(tags,tags+ftoutline.n_points);
+		std::vector<short> contoursv(contours,contours+ftoutline.n_contours);
+		return do_outline(pointsv, tagsv, contoursv);
 	}
 
 	std::string svgfooter()  {

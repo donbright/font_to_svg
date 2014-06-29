@@ -4,7 +4,7 @@
 #include "font_to_svg.hpp"
 
 void genSvg(std::string name, std::string charCode) {
-	font2svg::glyph g("Xerxes.ttf", (char*) charCode.c_str());
+	font2svg::glyph g("Xerxes.ttf", charCode);
 	std::string fname = std::string("Output/OldPersian-");
 	fname += name;
 	fname += ".svg";
