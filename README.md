@@ -1,7 +1,7 @@
 font_to_svg
 ===========
 
-This library will create SVG path shapes from TrueType font files.
+This library will create SVG path shapes from TrueType(R) font files.
 
 ### Current Status
 
@@ -25,7 +25,7 @@ be useful for web fonts or other usages.
 
 ### Using in your own C++ project
 
-    #include <truetype_to_svg.hpp>
+    #include <font_to_svg.hpp>
 
     int main()
     {
@@ -128,10 +128,10 @@ Truetype marks these contours in a special way - by the 'clockwise' ness
 of the order in which it lists the points that make up a contour. The 
 contours that have their points in 'clockwise' order are considered 
 'solid' The contours that have their points listed in 'counter 
-clockwise' (or anti-clockwise) order are considered 'holes'. For example,
-imagine the letter 'o'. The points making up the 'outside' contour
-are listed in clockwise order, while the points making up the 'inside'
-contour are listed in counter-clockwise order.
+clockwise' (also called 'anti-clockwise') order are considered 'holes'. 
+For example, imagine the letter 'o'. The points making up the 'outside' 
+contour are listed in clockwise order, while the points making up the 
+'inside' contour are listed in counter-clockwise order.
 
 But what type of points make up a contour? They are simple 2-dimensional 
 Cartesian points with integer coordinates. The points for a contour are 
@@ -192,12 +192,12 @@ Arabic or Devanagari.
 ### Test characters
 
 Nice characters that show unusual patterns. Good for testing.
-./example1 FreeSerif.ttf 67 > x.svg
-./example1 FreeSerif.ttf 68 > x.svg
-./example1 FreeSerif.ttf 0x2766 > x.svg
-./example1 FreeSerif.ttf 0x2767 > x.svg
-./example1 FreeSerif.ttf 0x1f01a > x.svg
-./example1 FreeSerif.ttf 0x48007 > x.svg
+./example1 FreeSerif.ttf 67 > xa67.svg
+./example1 FreeSerif.ttf 68 > xa68.svg
+./example1 FreeSerif.ttf 0x2766 > x2766.svg
+./example1 FreeSerif.ttf 0x2767 > x2767.svg
+./example1 FreeSerif.ttf 0x1f01a > x1f01a.svg
+./example1 FreeSerif.ttf 0x48007 > x48007.svg
 
 ### Other projects
 
