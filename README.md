@@ -145,11 +145,18 @@ curves represent the 'control' points between the 'on the curve' points.
 Now, Truetype doesn't just use any old Bezier curve. It uses a type of 
 Bezier called 'Quadratic', which consists of two endpoints 'on the 
 curve' and one 'control point'. If you check the Wikipedia article for 
-Bezier Curve, you can see simple animated examples. The math is not 
-actually as complicated as it looks - you can draw a Bezier Quadratic
-using only a ruler and a pencil.
+Bezier Curve, http://en.wikipedia.org/wiki/B%C3%A9zier_curve , you can see simple animated examples. 
+
+In this example, p0 is 'on the curve', p2 is also 'on the curve', but
+p1 is 'off the curve'. In other words, p1 is a 'control point'.
 
 ![Bezier.gif](bezier.gif " The Letter B ")
+
+The math is not actually as complicated as it looks on the wiki page- 
+you can draw a Bezier Quadratic using only a ruler and a pencil. I.E. 
+you can actually do it without any transcendental functions or 
+complicated algebra, just using simple ratios and integer math. But I 
+digress.
 
 Now... in Truetype there is a special feature in the way off-curve 
 points are listed. If two are listed in a row, then there is actually a 
