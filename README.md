@@ -29,7 +29,7 @@ be useful for web fonts or other usages.
 
     int main()
     {
-        font2svg::glyph g( "FreeSans.ttf", 67 );
+        font_to_svg::glyph g( "FreeSans.ttf", 67 );
         std::cout << g.outline();
     }
 
@@ -89,8 +89,8 @@ need to link to Freetype however, using your build system.
 Freetype's website is here: http://www.freetype.org/
 
 font_to_svg uses freetype to deal with vaguaries and variations of 
-Truetype file formats. font2svg does not use any of Freetype's bitmap 
-font-rendering code. font2svg is a pure "outline curve" renderer to be 
+Truetype file formats. font_to_svg does not use any of Freetype's bitmap 
+font-rendering code. font_to_svg is a pure "outline curve" renderer to be 
 used for vector/curve based output.
 
 Font_to_svg comes with a very permissive BSD style copyright license 
@@ -114,7 +114,7 @@ http://www.fileformat.info/info/unicode/block/index.htm
 
 Truetype fonts consist of a group of characters layed out in a file. The 
 truetype file format is very complicated, with various issues related to 
-character sets, glyph indexes, duplicated positions, etc etc etc. font2svg 
+character sets, glyph indexes, duplicated positions, etc etc etc. font_to_svg 
 uses the Freetype library to make it easy to deal with those problems 
 and to load the file into memory.
 
@@ -149,20 +149,22 @@ Bezier Curve, you can see simple animated examples. The math is not
 actually as complicated as it looks - you can draw a Bezier Quadratic
 using only a ruler and a pencil.
 
+![Bezier.gif](bezier.gif " The Letter B ")
+
 Now... in Truetype there is a special feature in the way off-curve 
 points are listed. If two are listed in a row, then there is actually a 
 'hidden' or 'implied' on-curve point at a position exactly halfway 
-between them. font2svg does not draw these points but they are easy to imagine
+between them. font_to_svg does not draw these points but they are easy to imagine
 when looking at the debug code. 
 
-Now. How does font2svg do SVG output? It basically just copies the point 
+Now. How does font_to_svg do SVG output? It basically just copies the point 
 and contour information in the TrueType file and splits it into SVG 
 paths. The actual rendering of the SVG file to something on a computer 
 screen is left to the SVG rendering programs, like web browsers or 
 Inkscape. The most complicated thing that these renderers do is probably 
 the "non-zero winding rule", which is a geometry rule that determines 
 how to properly draw the 'holes' and 'body' contours of a character 
-glyph. font2svg doesn't have to worry about that either - it just inserts 
+glyph. font_to_svg doesn't have to worry about that either - it just inserts 
 the svg property 'non-zero' fill-type into the generated SVG and the SVG 
 renderer should take care of the rest.
 
@@ -192,12 +194,13 @@ Arabic or Devanagari.
 ### Test characters
 
 Nice characters that show unusual patterns. Good for testing.
-./example1 FreeSerif.ttf 67 > xa67.svg
-./example1 FreeSerif.ttf 68 > xa68.svg
-./example1 FreeSerif.ttf 0x2766 > x2766.svg
-./example1 FreeSerif.ttf 0x2767 > x2767.svg
-./example1 FreeSerif.ttf 0x1f01a > x1f01a.svg
-./example1 FreeSerif.ttf 0x48007 > x48007.svg
+
+    ./example1 FreeSerif.ttf 67 > xa67.svg
+    ./example1 FreeSerif.ttf 68 > xa68.svg
+    ./example1 FreeSerif.ttf 0x2766 > x2766.svg
+    ./example1 FreeSerif.ttf 0x2767 > x2767.svg
+    ./example1 FreeSerif.ttf 0x1f01a > x1f01a.svg
+    ./example1 FreeSerif.ttf 0x48007 > x48007.svg
 
 ### Other projects
 
