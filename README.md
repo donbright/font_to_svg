@@ -14,8 +14,9 @@ Consider a very basic C++ program:
         std::cout << g.outline();
     }
 
-Compile and run, and the program will generate an SVG path, something 
-like this:
+Compile and run, and the program will generate an SVG path out of the 
+TrueType information for the character 66 (the Latin letter B), 
+something like this:
 
     <svg>
     <path d='M 591,-180 Q 591,-150 580,-121 Q 569,-92 543,-63 ... Z />
