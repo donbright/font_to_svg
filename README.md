@@ -1,7 +1,8 @@
 font_to_svg
 ===========
 
-This library will create SVG path shapes from TrueType(R) font files.
+This code will convert a single character in a TrueType(R) font file 
+into an SVG 'path' shape.
 
 ### basic usage:
 
@@ -15,8 +16,8 @@ Consider a very basic C++ program:
     }
 
 Compile and run, and the program will generate an SVG path out of the 
-TrueType information for the character 66 (the Latin letter B), 
-something like this:
+TrueType information for the character of Unicode U+0066 (the Latin 
+letter B), something like this:
 
     <svg>
     <path d='M 591,-180 Q 591,-150 580,-121 Q 569,-92 543,-63 ... Z />
