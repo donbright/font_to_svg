@@ -3,6 +3,33 @@ font_to_svg
 
 This library will create SVG path shapes from TrueType(R) font files.
 
+### basic usage:
+
+Consider a very basic C++ program:
+
+    #include <font_to_svg.hpp>
+    int main()
+    {
+        font_to_svg::glyph g( "FreeSans.ttf", 66 );
+        std::cout << g.outline();
+    }
+
+Compile and run, and the program will generate an SVG path, something 
+like this:
+
+    <svg>
+    <path d='M 591,-180 Q 591,-150 580,-121 Q 569,-92 543,-63 ... Z />
+    </svg>
+
+'M' is 'move to', and 'Q' is for Bezier curves. Open the resulting .svg 
+file in a web browser and you get something like this:
+
+![Rendering of font glyph](screenshot.png " The Letter B ")
+
+Another example: Floral Heart, Unicode 0x2766:
+
+![Rendering of font glyph](screenshot2.png " Floral Heart ")
+
 ### Current Status
 
 This project has some bugs but will handle 'standard' fonts reasonably well.
@@ -23,37 +50,14 @@ ligatures. It does not support creating an "SVG Font". It only does very
 basic conversion of Truetype glyphs to SVG path shapes. It might not 
 be useful for web fonts or other usages. 
 
-### Using in your own C++ project
-
-    #include <font_to_svg.hpp>
-
-    int main()
-    {
-        font_to_svg::glyph g( "FreeSans.ttf", 67 );
-        std::cout << g.outline();
-    }
-
-font_to_svg is a 'header library', so you don't have to 'build' it.
-You just #include the .hpp file in your C plus plus file, and then be 
-sure to link the Freetype library into your program using your compiler/
-build system.
-
-### Screenshots of results
-
-Here are two example outputs - letter B and Floral Heart. They both have 
-some debugging information turned on (nodes, lines, etc).
-
-![Rendering of font glyph](screenshot.png " The Letter B ")
-![Rendering of font glyph](screenshot2.png " Floral Heart ")
-
-### Example programs
+### More example programs
 
 There are several example programs included. They use the cmake build 
 system ( http://www.cmake.org ). For example:
      
      cmake .
      make
-     ./example1 tahoma.ttf 66 > out.svg 
+     ./example1 `locate tahoma.ttf` 66 > out.svg 
      firefox out.svg
 
 Example 1 and Example 2 just do basic output of a single character into 
