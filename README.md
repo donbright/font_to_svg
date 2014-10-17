@@ -89,7 +89,7 @@ Example 3 was created by github user Ebraminio to generate multiple .svg
 files from a single GPL font of ancient Persian letters ( Xerxes.ttf, 
 available by a web search )
 
-### Detail on using in your own projcet
+### Detail on using in your own project
 
 As noted, font_to_svg is a 'header library' so you dont need to 
 compile any libraries just include the header and use it. You will still 
