@@ -220,6 +220,9 @@ Nice characters that show unusual patterns. Good for testing.
 
 ### Other projects
 
+Sean Barret's amazing TTF parser + renderer:
+https://github.com/nothings/stb/blob/master/stb_truetype.h
+
 The "Batik" project does similar stuff. It is Java:
 
 http://xmlgraphics.apache.org/batik/tools/font-converter.html
