@@ -256,6 +256,12 @@ the truetype you are looking for.
     ./example1 ./FreeSerif.ttf 66 > /tmp/x.svg 
     firefox /tmp/x.svg
 
+### font_to_svg2.hpp
+
+@willzyba patched up the font_to_svg.hpp file, it is available as a more
+up-to-date alternative called font_to_svg2.hpp for your experimentation.
+It is theoretically faster and easier to use, but contains less debug info. 
+
 ### Todo
 
 get real name of glyph (like unicode name)
