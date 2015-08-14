@@ -1,5 +1,9 @@
 // font_to_svg.hpp - Read Font in TrueType (R) format, write SVG
 // Copyright Don Bright 2013 <hugh.m.bright@gmail.com>
+
+// modified by github user willzyba,
+// see https://github.com/donbright/font_to_svg/pull/3
+
 /*
  
  This software is provided 'as-is', without any express or implied
