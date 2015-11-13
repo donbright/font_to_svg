@@ -67,3 +67,4 @@ int main(int argc, char * argv[]) {
 	genSvg("HUNDRED", "0x103D5");
 	return 0;
 }
+
