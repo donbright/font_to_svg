@@ -166,12 +166,12 @@ namespace LatexDrawGraphics {
             
             char glyph_name[1024];
             FT_Get_Glyph_Name( _face, glyph_index, glyph_name, 1024 );
+            _gm = _slot->metrics;
             debug << "\nGlyph Name: " << glyph_name;
             debug << "\nGlyph Width: " << _gm.width
             << " Height: " << _gm.height
             << " Hor. Advance: " << _gm.horiAdvance
             << " Vert. Advance: " << _gm.vertAdvance;
-            _gm = _slot->metrics;
             
             // Print outline details, taken from the glyph in the slot.
             debug << "\nNum points: " << _outline.n_points;
