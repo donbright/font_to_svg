@@ -272,12 +272,12 @@ public:
 		ftoutline = slot->outline;
 		char glyph_name[1024];
 		FT_Get_Glyph_Name( face, glyph_index, glyph_name, 1024 );
+		gm = slot->metrics;
 		debug << "\nGlyph Name: " << glyph_name;
 		debug << "\nGlyph Width: " << gm.width
 			<< " Height: " << gm.height
 			<< " Hor. Advance: " << gm.horiAdvance
 			<< " Vert. Advance: " << gm.vertAdvance;
-		gm = slot->metrics;
 
 		// Print outline details, taken from the glyph in the slot.
 		debug << "\nNum points: " << ftoutline.n_points;
